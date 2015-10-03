@@ -1,0 +1,195 @@
+package com.switchit001.qaapp;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
+
+
+/*
+ * ADDING NEW ITEM TO LIST
+ * 
+ * list.add("Test");
+   listAdapter.clear();
+   listAdapter.addAll(list);
+   listAdapter.notifyDataSetChanged();
+ */
+
+
+public class QuestionListActivity extends Activity {
+	public static final String ROOT_ADDR = "http://dev.qa.switchit001.com/dev2/request.php";
+	String sessionKey, url;
+	int count;
+	Button askButton;
+	ListView listView;
+	ArrayList<QuestionObject> mList;
+	QuestionListAdapter listAdapter;
+	public Intent intent;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_question_list);
+		/**********************************************/
+		askButton = (Button) findViewById(R.id.askButton);
+		listView = (ListView) findViewById(R.id.listview);
+		mList = new ArrayList<QuestionObject>();
+		listAdapter = new QuestionListAdapter(this, R.layout.list_row, mList);
+		/**********************************************/
+
+
+		//execute async to get question data
+		sessionKey = getSharedPreferences("com.switchit001.qaapp", Context.MODE_PRIVATE).getString("sessionKey", "NULL");
+		url = ROOT_ADDR 
+				+ "?session=" + sessionKey
+				+ "&msgId=" + 3
+				+ "&par0=" + 1
+				+ "&par1=" //optional search string
+				+ "&par2=" + 1 
+				+ "&par3=" + 0;
+		new AsyncHandler().execute(url);
+
+		listView.setAdapter(listAdapter);
+		listAdapter.addAll(mList);
+		listAdapter.notifyDataSetChanged();
+
+		askButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				startActivity(new Intent(getApplicationContext(), CameraActivity.class));				
+			}
+		});
+	}
+	
+	public class QuestionListAdapter extends ArrayAdapter<QuestionObject> {
+		Context mContext;
+		TextView title, category;
+		ImageView thumbnail;
+		public QuestionListAdapter(Context context, int resource, ArrayList<QuestionObject> data) {
+			super(context, resource, data);
+			mContext = context;
+		}
+
+		public View getView(int position, View convertView, ViewGroup parent) {
+
+			Log.d("QA_APP", "GETVIEW");
+			LayoutInflater inflater = getLayoutInflater();
+			View rowView = inflater.inflate(R.layout.list_row, null, true);
+
+			title = (TextView) rowView.findViewById(R.id.list_title);
+			category = (TextView) rowView.findViewById(R.id.list_category);
+			
+			//CODE TO POPULATE DATA
+			title.setText(mList.get(position).getTitle());
+			category.setText(mList.get(position).getCategory());
+			
+			return rowView;
+
+		}
+
+		public int getCount() {
+			return 1;
+		}
+
+	}
+
+
+	private class AsyncHandler extends AsyncTask<String, Void, Void>
+	{
+
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+
+		}
+
+		@Override
+		protected Void doInBackground(String... params) {
+			JSONObject jObj = null;
+			HttpClient httpClient = new DefaultHttpClient(new BasicHttpParams());
+			HttpGet httpGet = new HttpGet(params[0]); //params[0] is passed in as the built url
+			httpGet.setHeader("Content-type", "application/json");
+			InputStream inputStream = null;
+			String result = null;
+			try {
+				HttpResponse response = httpClient.execute(httpGet);           
+				HttpEntity entity = response.getEntity();
+
+				inputStream = entity.getContent();
+				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"), 64);
+				StringBuilder sb = new StringBuilder();
+
+				String line = null;
+				while ((line = reader.readLine()) != null) {
+					sb.append(line + "\n");
+				}
+				result = sb.toString();
+			} catch (IllegalStateException e) { 
+				e.printStackTrace();
+			} catch (ClientProtocolException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			finally {
+				try{if(inputStream != null)inputStream.close();}catch(Exception e){}
+			}
+
+			JSONObject jsonResult;
+			JSONArray questionArray;
+			try {
+				jsonResult = new JSONObject(result);
+				questionArray = jsonResult.getJSONArray("questions");
+				for(int i = 0; i < questionArray.length(); i++) {
+					JSONObject tempObj = questionArray.getJSONObject(i);
+					
+					QuestionObject qObj = new QuestionObject();
+					qObj.setTitle(tempObj.getString("title"));
+					qObj.setCategory(tempObj.getInt("category"));
+					
+					mList.add(qObj);
+					
+				}
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			return null;
+
+		}
+
+		protected void onPostExecute(Void result) {
+
+		}
+	}
+
+}

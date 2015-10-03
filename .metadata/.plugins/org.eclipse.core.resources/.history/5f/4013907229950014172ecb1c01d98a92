@@ -1,0 +1,75 @@
+package com.switchit001.qaapp;
+
+import android.graphics.Bitmap;
+import android.widget.ImageView;
+
+public class QuestionObject {
+	private String title, body, thumbPath;
+	private int category, numAnswers, numFlags;
+	private Bitmap thumbImage;
+
+	public QuestionObject(String title, String body, int category, int numAnswers, int numFlags) {
+		this.title = title;
+		this.body = body;
+		this.category = category;
+		this.numAnswers = numAnswers;
+		this.numFlags = numFlags;
+	}
+	
+	public QuestionObject() {
+		
+	}
+
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getBody() {
+		return body;
+	}
+	public void setBody(String body) {
+		this.body = body;
+	}
+	public int getCategory() {
+		return category;
+	}
+	public void setCategory(int category) {
+		this.category = category;
+	}
+	public int getNumAnswers() {
+		return numAnswers;
+	}
+	public void setNumAnswers(int numAnswers) {
+		this.numAnswers = numAnswers;
+	}
+	public int getNumFlags() {
+		return numFlags;
+	}
+	public void setNumFlags(int numFlags) {
+		this.numFlags = numFlags;
+	}
+
+	public String getThumbPath() {
+		return thumbPath;
+	}
+
+	public void setThumbPath(String thumbPath) {
+		this.thumbPath = thumbPath;
+	}
+	
+	public String toString() {
+		String s = new String("OBJECT");
+		s += "Title: " + getTitle() + "\n";
+		return s;
+	}
+	
+	public Bitmap getThumbImage() {
+		return thumbImage;
+	}
+
+	public void setThumbImage(Bitmap thumbImage) {
+		this.thumbImage = thumbImage;
+	}
+}

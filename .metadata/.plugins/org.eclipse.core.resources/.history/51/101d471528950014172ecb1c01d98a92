@@ -1,0 +1,244 @@
+/**
+ * QuestionListActivity.java
+ * Techster Solutions
+ * Jason John
+ */
+package com.switchit001.qaapp;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
+
+
+/*
+ * ADDING NEW ITEM TO LIST
+ * 
+ * list.add("Test");
+   listAdapter.clear();
+   listAdapter.addAll(list);
+   listAdapter.notifyDataSetChanged();
+ */
+
+
+public class QuestionListActivity extends Activity {
+	public static final String ROOT_ADDR = "http://dev.qa.switchit001.com/dev2/request.php";
+	String sessionKey, url;
+	int count;
+	Button askButton;
+	ListView listView;
+	ArrayList<QuestionObject> mList;
+	QuestionListAdapter listAdapter;
+	public Intent intent;
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_question_list);
+		/**********************************************/
+		//Initializing user interface
+		askButton = (Button) findViewById(R.id.askButton);
+		listView = (ListView) findViewById(R.id.listview);
+		mList = new ArrayList<QuestionObject>();
+		listAdapter = new QuestionListAdapter(this, R.layout.list_row);
+		/**********************************************/
+
+		//execute async to get question data
+		sessionKey = getSharedPreferences("com.switchit001.qaapp", Context.MODE_PRIVATE).getString("sessionKey", "NULL");
+		
+		//Building URL for HTTP Request
+		url = ROOT_ADDR 
+				+ "?session=" + sessionKey
+				+ "&msgId=" + 3
+				+ "&par0=" + 1
+				+ "&par1=" //optional search string
+				+ "&par2=" + 1 
+				+ "&par3=" + 0;
+		
+		//Execute AsyncTask on url
+		new AsyncHandler().execute(url);
+
+
+		//OnClickListener for the "Ask!" Button. Takes user to camera preview
+		askButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				startActivity(new Intent(getApplicationContext(), CameraActivity.class));				
+			}
+		});
+	}
+
+	/*
+	 * Question List Adapter
+	 * Custom ListView adapter that generates a row on the list based on the contents of 
+	 * the list of questions gathered from the server. R.layout.list_row is the layout for
+	 * each row. 
+	 */
+	public class QuestionListAdapter extends ArrayAdapter<QuestionObject> {
+		Context mContext;
+		TextView title, category;
+		ImageView thumbnail;
+		public QuestionListAdapter(Context context, int resource) {
+			super(context, resource);
+			mContext = context;
+		}
+
+		public View getView(int position, View convertView, ViewGroup parent) {
+			View rowView = convertView;
+			Log.d("QA_APP", "Size: "+mList.size());
+			if(rowView == null) {
+
+				LayoutInflater inflater = getLayoutInflater();
+				rowView = inflater.inflate(R.layout.list_row, null, true);
+
+				//INITIALIZE CUSTOM LIST ROW ELEMENTS
+				title = (TextView) rowView.findViewById(R.id.list_title);
+				category = (TextView) rowView.findViewById(R.id.list_category);
+				thumbnail = (ImageView) rowView.findViewById(R.id.list_thumbnail);
+
+				//CODE TO POPULATE DATA
+				title.setText(mList.get(position).getTitle());
+				category.setText("Category: "+ mList.get(position).getCategory());
+				
+				//Currently "NO PREV"
+				thumbnail.setImageBitmap(mList.get(position).getThumbImage());
+			}
+
+			return rowView;
+
+		}
+
+
+	}
+
+	/*
+	 * AsyncHandler
+	 * Handles AsyncTask (Can't do network operations on the main (UI) thread.
+	 * Sends HTTP Request to Server and parses JSON to get question data.
+	 * Question data is put into a QuestionObject object and the QuestionObject
+	 * is placed into an ArrayList.
+	 */
+	private class AsyncHandler extends AsyncTask<String, Void, Void>
+	{
+
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+
+		}
+
+		@Override
+		protected Void doInBackground(String... params) {
+			JSONObject jsonResult;
+			JSONArray questionArray;
+			JSONObject jObj = null;
+			HttpClient httpClient = new DefaultHttpClient(new BasicHttpParams());
+			
+			HttpGet httpGet = new HttpGet(params[0]); //params[0] is passed in as the built url from above
+			httpGet.setHeader("Content-type", "application/json");
+			InputStream inputStream = null;
+			String result = null;
+			try {
+				HttpResponse response = httpClient.execute(httpGet);           
+				HttpEntity entity = response.getEntity();
+
+				inputStream = entity.getContent();
+				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"), 64);
+				StringBuilder sb = new StringBuilder();
+
+				String line = null;
+				while ((line = reader.readLine()) != null) {
+					sb.append(line + "\n");
+				}
+				result = sb.toString();
+
+				jsonResult = new JSONObject(result);
+				JSONObject j = jsonResult.getJSONObject("results");
+				questionArray = j.getJSONArray("questions");
+				
+				//iterating through the JSON Array and putting data into a QuestionObject
+				for(int i = 0; i < questionArray.length(); i++) {
+					JSONObject tempObj = questionArray.getJSONObject(i);
+
+					QuestionObject qObj = new QuestionObject();
+					qObj.setTitle(tempObj.getString("title"));
+					qObj.setCategory(tempObj.getInt("category"));
+					qObj.setThumbPath(tempObj.getString("thumbnail"));
+
+					Bitmap bitmap = getBitmapFromServer((qObj.getThumbPath()));
+					bitmap = Bitmap.createScaledBitmap(bitmap, 150, 150, false);
+
+					qObj.setThumbImage(bitmap);
+
+					mList.add(qObj);
+				}
+				//Catching a bunch of exceptions
+			} catch (IllegalStateException e) { 
+				e.printStackTrace();
+			} catch (ClientProtocolException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+			finally {
+				try{if(inputStream != null)inputStream.close();}catch(Exception e){}
+			}
+
+			return null;
+
+		}
+
+		protected void onPostExecute(Void result) {
+			listView.setAdapter(listAdapter);
+			listAdapter.addAll(mList);
+			listAdapter.notifyDataSetChanged();
+		}
+	}
+
+	public Bitmap getBitmapFromServer(String url) {
+		Log.d("QA_APP", "Downloading Image...");
+		String urldisplay = url;
+		Bitmap mIcon11 = null;
+		try {
+			InputStream in = new java.net.URL(urldisplay).openStream();
+			mIcon11 = BitmapFactory.decodeStream(in);
+		} catch (Exception e) {
+			Log.e("Error", e.getMessage());
+			e.printStackTrace();
+		}
+		return mIcon11;
+	}
+}

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>7D3E17B8-6E4D-425D-9FA5-7F76DF6A6346</string>
+	<key>IDESourceControlProjectName</key>
+	<string>AskIt</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>4194E9D3BB17CE1414BF50FAA4DEF58349415DD0</key>
+		<string>https://github.com/tecno40/QA_APP.git</string>
+		<key>4AAAEB015282665650DF3A3EBA43CC99D5BCCD41</key>
+		<string>https://github.com/komreezy/AnswerMEApp.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Q&amp;AAPP_iOS/AskIt/AskIt.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>4194E9D3BB17CE1414BF50FAA4DEF58349415DD0</key>
+		<string>../../../..</string>
+		<key>4AAAEB015282665650DF3A3EBA43CC99D5BCCD41</key>
+		<string>../../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/tecno40/QA_APP.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>4194E9D3BB17CE1414BF50FAA4DEF58349415DD0</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>4AAAEB015282665650DF3A3EBA43CC99D5BCCD41</string>
+			<key>IDESourceControlWCCName</key>
+			<string></string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>4194E9D3BB17CE1414BF50FAA4DEF58349415DD0</string>
+			<key>IDESourceControlWCCName</key>
+			<string>QA_APP</string>
+		</dict>
+	</array>
+</dict>
+</plist>

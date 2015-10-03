@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename local variable &apos;mIcon11&apos; in &apos;com.switchit001.qaapp.QuestionListActivity.getBitmapFromServer(...)&apos; to &apos;bmp&apos;&#x0D;&#x0A;- Original project: &apos;Q&amp;AApp_Android&apos;&#x0D;&#x0A;- Original element: &apos;com.switchit001.qaapp.QuestionListActivity.getBitmapFromServer(String).mIcon11&apos;&#x0D;&#x0A;- Renamed element: &apos;mIcon11&apos;&#x0D;&#x0A;- Update references to refactored element" description="Rename local variable &apos;mIcon11&apos;" id="org.eclipse.jdt.ui.rename.local.variable" input="/src&lt;com.switchit001.qaapp{QuestionListActivity.java[QuestionListActivity~getBitmapFromServer~QString;@mIcon11!7423!7444!7430!7436!QBitmap;!0!false" name="bmp" references="true" stamp="1420496049615" version="1.0"/>
+</session>

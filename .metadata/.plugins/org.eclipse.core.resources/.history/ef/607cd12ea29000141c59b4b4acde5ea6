@@ -1,0 +1,244 @@
+package com.switchit001.qaapp;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
+import java.util.Arrays;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.json.JSONObject;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.Toast;
+
+public class MsgActivity extends Activity {
+	public static final String ROOT_ADDR = "http://dev.qa.switchit001.com/dev2/request.php"; 
+	public static final int MSG_ID = 1;
+	public static final String BOUNDARY =  "*****";
+	public static final String LINE_END= "\r\n";
+	public static final String TWO_HYPHENS="--";
+	SharedPreferences sharedPrefs;
+	EditText titleField, msgField;
+	Spinner dropdownMenu;
+	Button button;
+	ImageView imgView;
+	String url, sessionKey;
+	Bitmap bitmap;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_msg);
+		/************************************/
+		dropdownMenu = (Spinner) findViewById(R.id.spinner1);
+		button = (Button) findViewById(R.id.button1);
+		imgView = (ImageView) findViewById(R.id.pic_view);
+		titleField = (EditText) findViewById(R.id.title_field);
+		msgField = (EditText) findViewById(R.id.msg_field);
+		/************************************/
+		sharedPrefs = this.getSharedPreferences("com.switchit001.qaapp", Context.MODE_PRIVATE);
+		sessionKey = sharedPrefs.getString("sessionKey", "NULL");
+
+		bitmap = PictUtil.loadFromCacheFile();
+		if(bitmap == null)
+			Log.e("QA_APP", "NULL :(");
+		imgView.setImageBitmap(bitmap);
+
+		button.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				if(titleField.getText().toString().matches("") || msgField.getText().toString().matches(""))
+					Toast.makeText(getApplicationContext(), "Please fill in both fields", Toast.LENGTH_SHORT).show();
+				else {
+					url = ROOT_ADDR 
+							+ "?session=" + sessionKey
+							+ "&msgId=2"
+							+ "&par0=" + titleField.getText().toString()
+							+ "&par1=1"
+							+ "&par2=" +msgField.getText().toString()
+							+ "&par3=1";
+					Log.d("QA_APP", url);
+					new AsyncHandler().execute(url);
+				}
+			}
+		});
+
+
+	}
+
+
+	private class AsyncHandler extends AsyncTask<String, Void, Void>
+	{
+
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+
+		}
+
+		@SuppressWarnings("deprecation")
+		@Override
+		protected Void doInBackground(String... params) {
+			
+			String urlString=params[0];//this holds the URL location in the text format
+			URL url;
+			HttpURLConnection connection=null;
+			DataOutputStream outputStream=null;
+			DataInputStream inputStream=null;
+			
+			byte[] serverOutput=new byte[100];//temporarily holds server output before its converted
+			String serverOutputString="";//Permanently holds the server output
+			int serverOutputBytesToRead;//holds the number of bytes that need to be read from the server
+			
+			/*
+			 * Alternative method to load file. This is better to use 
+			 * if you plan to save the file in the cache.
+			 * 
+			FileInputStream fileInput=null;
+			try {
+				fileInput=new FileInputStream(new File(PictUtil.getCacheFilename()));
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			*/
+			
+			//set up the URL and connection
+			try{
+				url=new URL(urlString);
+				connection=(HttpURLConnection)url.openConnection();
+			}
+			catch (MalformedURLException e){
+				Log.e("Error","Malformed URL",e);
+			}
+			catch (IOException e){
+				Log.e("Error","IOError while establishing connection",e);
+			}
+			
+			
+			//set up the connection to upload a file
+			try{
+				connection.setDoInput(true);
+				connection.setDoOutput(true);
+				connection.setUseCaches(false);
+				connection.setRequestMethod("POST");
+				connection.setRequestProperty("Connection", "Keep-Alive");
+				connection.setRequestProperty("Content-Type", "multipart/form-data;boundary="+BOUNDARY);
+			}
+			catch (ProtocolException e){
+				Log.e("Error","Protocol error while setting the connection properties",e);
+			}
+			
+			//Send the file
+			try{
+				outputStream = new DataOutputStream (connection.getOutputStream());
+				outputStream.writeBytes(TWO_HYPHENS+BOUNDARY+LINE_END);
+				outputStream.writeBytes("Content-Disposition: form-data; name=\"file0\";filename=\"upload.jpg\""+LINE_END);
+				outputStream.writeBytes(LINE_END);
+			}
+			catch (IOException e){
+				Log.e("Error","IOError while preparing to send file",e);
+			}
+			
+			
+			//send the file
+			try{
+				ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				bitmap.compress(CompressFormat.JPEG, 100, bos);
+				byte[] data = bos.toByteArray();
+				outputStream.write(data,0,data.length);
+				
+				/*
+				 * Alternative method to load the file. This method should be
+				 * used if you plan to use the cache.
+				 * 
+				 * byte[] buffer=new byte[100];
+				int bytesRead=fileInput.read(buffer,0,100);
+				while (bytesRead>0)
+				{
+					outputStream.write(buffer,0,bytesRead);
+					bytesRead=fileInput.read(buffer,0,100);
+				}*/
+			}
+			catch (IOException e){
+				Log.e("Error","IOError while sending file to server",e);
+			}
+			
+			//write the post file upload info
+			try{
+				outputStream.writeBytes(LINE_END);
+				outputStream.writeBytes(TWO_HYPHENS+BOUNDARY+TWO_HYPHENS+LINE_END);
+				outputStream.flush();
+				outputStream.close();
+			}
+			catch (IOException e){
+				Log.e("Error","Error while writting post file upload info",e);
+			}
+
+			
+			//read the server's response
+			try{
+				inputStream=new DataInputStream(connection.getInputStream());
+			
+				serverOutputBytesToRead=inputStream.available();
+			
+				while (serverOutputBytesToRead>0)
+				{
+					if (serverOutputBytesToRead>100)
+					{
+						serverOutputBytesToRead=100;
+					}
+					
+					inputStream.read(serverOutput, 0,serverOutputBytesToRead);
+					serverOutputString+=new String(serverOutput,"UTF-8");
+					
+					serverOutputBytesToRead=inputStream.available();
+				}
+			}catch (IOException e)
+			{
+				Log.d("Error", "IOError while reading from server", e);
+			}
+			
+			return null;
+
+		}
+
+		protected void onPostExecute(Void result) {
+
+		}
+	}
+
+
+
+}

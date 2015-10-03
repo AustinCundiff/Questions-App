@@ -1,0 +1,20 @@
+package com.switchit001.qaapp;
+
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.widget.ImageView;
+
+public class MsgActivity extends Activity {
+
+	ImageView imgView;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_msg);
+		/************************************/
+		imgView = (ImageView) findViewById(R.id.pic_view);
+		Bitmap b = PictUtil.loadFromCacheFile();
+		imgView.setImageBitmap(b);
+	}
+}

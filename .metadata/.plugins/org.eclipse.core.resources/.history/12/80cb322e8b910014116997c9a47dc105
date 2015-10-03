@@ -1,0 +1,49 @@
+package com.switchit001.qaapp;
+
+import android.widget.ImageView;
+
+public class QuestionObject {
+	String title, body, thumbPath;
+	int category, numAnswers, numFlags;
+	ImageView thumbnail;
+	
+	public QuestionObject(String title, String body, int category, int numAnswers, int numFlags) {
+		this.title = title;
+		this.body = body;
+		this.category = category;
+		this.numAnswers = numAnswers;
+		this.numFlags = numFlags;
+	}
+	
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getBody() {
+		return body;
+	}
+	public void setBody(String body) {
+		this.body = body;
+	}
+	public int getCategory() {
+		return category;
+	}
+	public void setCategory(int category) {
+		this.category = category;
+	}
+	public int getNumAnswers() {
+		return numAnswers;
+	}
+	public void setNumAnswers(int numAnswers) {
+		this.numAnswers = numAnswers;
+	}
+	public int getNumFlags() {
+		return numFlags;
+	}
+	public void setNumFlags(int numFlags) {
+		this.numFlags = numFlags;
+	}
+	
+}

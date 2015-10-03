@@ -1,0 +1,13 @@
+package com.switchit001.qaapp;
+
+import android.content.Context;
+import android.widget.ArrayAdapter;
+
+public class QuestionListAdapter extends ArrayAdapter<String> {
+	Context mContext;
+	public QuestionListAdapter(Context context, int resource) {
+		super(context, resource);
+		mContext = context;
+	}
+
+}
